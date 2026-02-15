@@ -19,7 +19,7 @@ public class Stock {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String symbol; // e.g. RELIANCE, TCS
 
     private String name;

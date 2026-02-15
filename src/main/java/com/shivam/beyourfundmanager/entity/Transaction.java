@@ -3,9 +3,13 @@ package com.shivam.beyourfundmanager.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.shivam.beyourfundmanager.domain.TransactionType;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -23,21 +27,24 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "stock_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
 
     @Enumerated(EnumType.STRING)
-    private TransactionType type; // BUY or SELL
+    @Column(nullable = false)
+    private TransactionType type;
 
-    private int quantity;
+    @Column(nullable = false)
+    private Integer quantity;
 
-    private double price; // per unit price
+    @Column(nullable = false)
+    private Double price;
 
+    @Column(nullable = false)
     private LocalDateTime timestamp;
 }
-

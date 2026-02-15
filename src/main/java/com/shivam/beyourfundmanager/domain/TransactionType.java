@@ -1,7 +1,6 @@
-package com.shivam.beyourfundmanager.entity;
+package com.shivam.beyourfundmanager.domain;
 
 public enum TransactionType {
     BUY,
     SELL
 }
-
