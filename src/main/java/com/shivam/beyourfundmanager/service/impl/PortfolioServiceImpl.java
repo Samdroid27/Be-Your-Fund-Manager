@@ -38,7 +38,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 
     @Override
     @Transactional(Transactional.TxType.SUPPORTS)
-    public PortfolioSummaryResponse getPortfolio(UUID userId) {
+    public PortfolioSummaryResponse getPortfolio(Long userId) {
 
         List<Lot> activeLots = fetchActiveLots(userId);
         Map<Instrument, List<Lot>> groupedLots = groupLotsByInstrument(activeLots);
@@ -72,7 +72,7 @@ public class PortfolioServiceImpl implements PortfolioService {
     // Modular Helper Functions
     // ------------------------------
 
-    private List<Lot> fetchActiveLots(UUID userId) {
+    private List<Lot> fetchActiveLots(Long userId) {
         return lotRepository.findByUser_IdAndRemainingQuantityGreaterThan(
                 userId, BigDecimal.ZERO
         );
@@ -87,7 +87,7 @@ public class PortfolioServiceImpl implements PortfolioService {
         return map;
     }
 
-    private HoldingResponse buildHolding(UUID userId,
+    private HoldingResponse buildHolding(Long userId,
                                          Instrument instrument,
                                          List<Lot> lots) {
 
@@ -137,7 +137,7 @@ public class PortfolioServiceImpl implements PortfolioService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private BigDecimal calculateBuyOnlyAverage(UUID userId, Long instrumentId) {
+    private BigDecimal calculateBuyOnlyAverage(Long userId, Long instrumentId) {
         BigDecimal totalBuyValue = Optional.ofNullable(
                 transactionRepository.sumBuyValue(userId, instrumentId)
         ).orElse(BigDecimal.ZERO);
@@ -149,7 +149,7 @@ public class PortfolioServiceImpl implements PortfolioService {
         return safeDivide(totalBuyValue, totalBuyQty);
     }
 
-    private BigDecimal calculateCapitalAdjustedAverage(UUID userId,
+    private BigDecimal calculateCapitalAdjustedAverage(Long userId,
                                                        Long instrumentId,
                                                        BigDecimal totalQty) {
 

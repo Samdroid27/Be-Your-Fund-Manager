@@ -2,7 +2,6 @@ package com.shivam.beyourfundmanager.repository;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +11,7 @@ import com.shivam.beyourfundmanager.entity.enums.TransactionType;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    List<Transaction> findByUser_IdOrderByTransactionDateAsc(UUID userId);
+    List<Transaction> findByUser_IdOrderByTransactionDateAsc(Long userId);
 
     @Query("""
         SELECT COALESCE(SUM(t.quantity * t.price), 0)
@@ -21,7 +20,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         AND t.instrument.id = :instrumentId
         AND t.type = 'BUY'
     """)
-    BigDecimal sumBuyValue(UUID userId, Long instrumentId);
+    BigDecimal sumBuyValue(Long userId, Long instrumentId);
 
     @Query("""
         SELECT COALESCE(SUM(t.quantity), 0)
@@ -30,10 +29,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         AND t.instrument.id = :instrumentId
         AND t.type = 'BUY'
     """)
-    BigDecimal sumBuyQuantity(UUID userId, Long instrumentId);
+    BigDecimal sumBuyQuantity(Long userId, Long instrumentId);
 
     List<Transaction> findByUser_IdAndType(
-            UUID userId,
+            Long userId,
             TransactionType type
     );
 }

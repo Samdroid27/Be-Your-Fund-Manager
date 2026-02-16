@@ -1,0 +1,45 @@
+type Query {
+    portfolio(userId: ID!): PortfolioSummaryResponse
+}
+
+type Mutation {
+    createTransaction(input: CreateTransactionRequest!): TransactionResponse
+}
+
+type PortfolioSummaryResponse {
+    totalInvestedAmount: Float
+    totalCurrentValue: Float
+    totalProfitLoss: Float
+    holdings: [HoldingResponse]
+}
+
+type HoldingResponse {
+    symbol: String
+    quantity: Float
+    weightedAverage: Float
+    buyOnlyAverage: Float
+    capitalAdjustedAverage: Float
+    currentPrice: Float
+    currentValue: Float
+    profitLoss: Float
+}
+
+type TransactionResponse {
+    id: ID
+    symbol: String
+    exchange: String
+    type: String
+    quantity: Float
+    price: Float
+    transactionDate: String
+}
+
+input CreateTransactionRequest {
+    userId: ID!
+    symbol: String!
+    exchange: String
+    type: String!
+    quantity: Float!
+    price: Float!
+    transactionDate: String!
+}

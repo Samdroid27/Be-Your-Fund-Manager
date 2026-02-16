@@ -2,7 +2,6 @@ package com.shivam.beyourfundmanager.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import com.shivam.beyourfundmanager.entity.enums.TransactionType;
 
@@ -13,7 +12,7 @@ import lombok.Setter;
 @Setter
 public class CreateTransactionRequest {
 
-    private UUID userId;
+    private Long userId;
 
     private String symbol;
 

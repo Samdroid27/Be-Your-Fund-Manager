@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -158,7 +157,7 @@ public class TransactionServiceImpl implements TransactionService {
     // Builders & Fetchers
     // ------------------------------
 
-    private User fetchUser(UUID userId) {
+    private User fetchUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found"));
