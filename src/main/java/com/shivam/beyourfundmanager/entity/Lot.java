@@ -3,12 +3,8 @@ package com.shivam.beyourfundmanager.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.shivam.beyourfundmanager.entity.enums.TransactionType;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -19,10 +15,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(indexes = {
-    @Index(name = "idx_tx_user_instrument", columnList = "user_id,instrument_id")
+        @Index(name = "idx_lot_user_instrument", columnList = "user_id,instrument_id")
 })
-
-public class Transaction extends BaseEntity {
+public class Lot extends BaseEntity {
 
     @ManyToOne(optional = false)
     private User user;
@@ -30,16 +25,18 @@ public class Transaction extends BaseEntity {
     @ManyToOne(optional = false)
     private Instrument instrument;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TransactionType type;
+    @Column(nullable = false, precision = 19, scale = 6)
+    private BigDecimal originalQuantity;
 
     @Column(nullable = false, precision = 19, scale = 6)
-    private BigDecimal quantity;
+    private BigDecimal remainingQuantity;
 
     @Column(nullable = false, precision = 19, scale = 4)
-    private BigDecimal price;
+    private BigDecimal buyPrice;
 
     @Column(nullable = false)
-    private LocalDateTime transactionDate;
+    private LocalDateTime buyDate;
+
+    @ManyToOne(optional = false)
+    private Transaction transaction;
 }

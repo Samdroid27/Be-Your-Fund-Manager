@@ -1,26 +1,29 @@
 package com.shivam.beyourfundmanager.dto;
 
-import com.shivam.beyourfundmanager.domain.TransactionType;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import lombok.Data;
+import com.shivam.beyourfundmanager.entity.enums.TransactionType;
 
-@Data
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class CreateTransactionRequest {
 
-    @NotBlank(message = "Stock symbol is required")
-    private String stockSymbol;
+    private UUID userId;
 
-    @NotNull(message = "Transaction type is required")
+    private String symbol;
+
+    private String exchange; // null for MF/RSU
+
     private TransactionType type;
 
-    @NotNull(message = "Quantity is required")
-    @Positive(message = "Quantity must be greater than zero")
-    private Integer quantity;
+    private BigDecimal quantity;
 
-    @NotNull(message = "Price is required")
-    @Positive(message = "Price must be greater than zero")
-    private Double price;
+    private BigDecimal price;
+
+    private LocalDateTime transactionDate;
 }

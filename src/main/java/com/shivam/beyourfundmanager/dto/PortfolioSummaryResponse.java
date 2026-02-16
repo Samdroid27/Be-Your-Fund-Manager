@@ -1,16 +1,20 @@
 package com.shivam.beyourfundmanager.dto;
 
-import lombok.Data;
-
+import java.math.BigDecimal;
 import java.util.List;
 
-@Data
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class PortfolioSummaryResponse {
 
-    private Double totalInvestedAmount;
-    private Double totalCurrentValue;
-    private Double totalProfitLoss;
-    private Double totalProfitLossPercentage;
+    private BigDecimal totalInvestedAmount;
+
+    private BigDecimal totalCurrentValue;
+
+    private BigDecimal totalProfitLoss;
 
     private List<HoldingResponse> holdings;
 }

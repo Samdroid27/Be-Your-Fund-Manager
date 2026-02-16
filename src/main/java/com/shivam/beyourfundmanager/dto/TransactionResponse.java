@@ -1,19 +1,28 @@
 package com.shivam.beyourfundmanager.dto;
 
-import com.shivam.beyourfundmanager.domain.TransactionType;
-
-import lombok.Data;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
-@Data
+import com.shivam.beyourfundmanager.entity.enums.TransactionType;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class TransactionResponse {
 
-    private UUID id;
-    private String stockSymbol;
+    private Long id;
+
+    private String symbol;
+
+    private String exchange;
+
     private TransactionType type;
-    private Integer quantity;
-    private Double price;
-    private LocalDateTime timestamp;
+
+    private BigDecimal quantity;
+
+    private BigDecimal price;
+
+    private LocalDateTime transactionDate;
 }

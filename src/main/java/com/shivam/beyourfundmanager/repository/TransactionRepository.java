@@ -1,33 +1,39 @@
 package com.shivam.beyourfundmanager.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
 
 import com.shivam.beyourfundmanager.entity.Transaction;
-import com.shivam.beyourfundmanager.domain.TransactionType;
+import com.shivam.beyourfundmanager.entity.enums.TransactionType;
 
-@Repository
-public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
+public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    /** All transactions of a user (ordered by timestamp for correct weighted-avg). */
-    List<Transaction> findByUser_IdOrderByTimestampAsc(UUID userId);
+    List<Transaction> findByUser_IdOrderByTransactionDateAsc(UUID userId);
 
-    /** All transactions of a user for a specific stock. */
-    List<Transaction> findByUser_IdAndStock_Symbol(UUID userId, String symbol);
+    @Query("""
+        SELECT COALESCE(SUM(t.quantity * t.price), 0)
+        FROM Transaction t
+        WHERE t.user.id = :userId
+        AND t.instrument.id = :instrumentId
+        AND t.type = 'BUY'
+    """)
+    BigDecimal sumBuyValue(UUID userId, Long instrumentId);
 
-    /** Filter by type (BUY or SELL). */
-    List<Transaction> findByUser_IdAndStock_SymbolAndType(
+    @Query("""
+        SELECT COALESCE(SUM(t.quantity), 0)
+        FROM Transaction t
+        WHERE t.user.id = :userId
+        AND t.instrument.id = :instrumentId
+        AND t.type = 'BUY'
+    """)
+    BigDecimal sumBuyQuantity(UUID userId, Long instrumentId);
+
+    List<Transaction> findByUser_IdAndType(
             UUID userId,
-            String symbol,
             TransactionType type
-    );
-
-    /** Ordered transactions (important for avg calculation). */
-    List<Transaction> findByUser_IdAndStock_SymbolOrderByTimestampAsc(
-            UUID userId,
-            String symbol
     );
 }

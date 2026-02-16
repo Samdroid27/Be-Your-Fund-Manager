@@ -1,16 +1,27 @@
 package com.shivam.beyourfundmanager.dto;
 
-import lombok.Data;
+import java.math.BigDecimal;
 
-@Data
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class HoldingResponse {
 
-    private String stockSymbol;
-    private Integer totalQuantity;
-    private Double averagePrice;
-    private Double investedAmount;
-    private Double currentPrice;   // from external API later
-    private Double currentValue;
-    private Double profitLoss;     // calculated in service
-    private Double profitLossPercentage;
+    private String symbol;
+
+    private BigDecimal quantity;
+
+    private BigDecimal weightedAverage;
+
+    private BigDecimal buyOnlyAverage;
+
+    private BigDecimal capitalAdjustedAverage;
+
+    private BigDecimal currentPrice;
+
+    private BigDecimal currentValue;
+
+    private BigDecimal profitLoss;
 }
