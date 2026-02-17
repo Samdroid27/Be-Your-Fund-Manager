@@ -1,0 +1,20 @@
+type Mutation {
+    createTransaction(input: CreateTransactionInput!): TransactionResponse
+}
+
+input CreateTransactionInput {
+    userId: ID!
+    symbol: String!
+    exchange: String
+    type: String!
+    quantity: Float!
+    price: Float!
+    transactionDate: String!
+}
+
+type TransactionResponse {
+    id: ID
+    symbol: String
+    quantity: Float
+    price: Float
+}

@@ -1,0 +1,19 @@
+type Query {
+    instruments: [Instrument]
+    instrument(id: ID!): Instrument
+}
+
+type Instrument {
+    id: ID
+    name: String
+    symbol: String
+    assetType: AssetType
+    exchange: String
+    isin: String
+}
+
+enum AssetType {
+    EQUITY
+    MUTUAL_FUND
+    RSU
+}

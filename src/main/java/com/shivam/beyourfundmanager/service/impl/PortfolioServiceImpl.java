@@ -4,6 +4,7 @@ import com.shivam.beyourfundmanager.dto.HoldingResponse;
 import com.shivam.beyourfundmanager.dto.PortfolioSummaryResponse;
 import com.shivam.beyourfundmanager.entity.Instrument;
 import com.shivam.beyourfundmanager.entity.Lot;
+import com.shivam.beyourfundmanager.entity.enums.PortfolioViewType;
 import com.shivam.beyourfundmanager.repository.LotRepository;
 import com.shivam.beyourfundmanager.repository.PriceSnapshotRepository;
 import com.shivam.beyourfundmanager.repository.RealizedGainRepository;
@@ -38,7 +39,8 @@ public class PortfolioServiceImpl implements PortfolioService {
 
     @Override
     @Transactional(Transactional.TxType.SUPPORTS)
-    public PortfolioSummaryResponse getPortfolio(Long userId) {
+    public PortfolioSummaryResponse getPortfolio(Long userId,
+                                                 PortfolioViewType viewType) {
 
         List<Lot> activeLots = fetchActiveLots(userId);
         Map<Instrument, List<Lot>> groupedLots = groupLotsByInstrument(activeLots);
@@ -52,11 +54,13 @@ public class PortfolioServiceImpl implements PortfolioService {
             Instrument instrument = entry.getKey();
             List<Lot> lots = entry.getValue();
 
-            HoldingResponse holding = buildHolding(userId, instrument, lots);
+            HoldingResponse holding =
+                    buildHolding(userId, instrument, lots, viewType);
+
             holdings.add(holding);
 
             totalInvested = totalInvested.add(
-                    holding.getWeightedAverage()
+                    holding.getAveragePrice()
                             .multiply(holding.getQuantity())
             );
 
@@ -65,31 +69,21 @@ public class PortfolioServiceImpl implements PortfolioService {
             );
         }
 
-        return buildPortfolioSummary(holdings, totalInvested, totalCurrentValue);
-    }
-
-    // ------------------------------
-    // Modular Helper Functions
-    // ------------------------------
-
-    private List<Lot> fetchActiveLots(Long userId) {
-        return lotRepository.findByUser_IdAndRemainingQuantityGreaterThan(
-                userId, BigDecimal.ZERO
+        return buildPortfolioSummary(
+                holdings,
+                totalInvested,
+                totalCurrentValue
         );
     }
 
-    private Map<Instrument, List<Lot>> groupLotsByInstrument(List<Lot> lots) {
-        Map<Instrument, List<Lot>> map = new HashMap<>();
-        for (Lot lot : lots) {
-            map.computeIfAbsent(lot.getInstrument(), k -> new ArrayList<>())
-               .add(lot);
-        }
-        return map;
-    }
+    // ----------------------------------------
+    // Core Holding Builder
+    // ----------------------------------------
 
     private HoldingResponse buildHolding(Long userId,
                                          Instrument instrument,
-                                         List<Lot> lots) {
+                                         List<Lot> lots,
+                                         PortfolioViewType viewType) {
 
         BigDecimal totalQty = calculateTotalQuantity(lots);
         BigDecimal weightedCost = calculateWeightedCost(lots);
@@ -101,7 +95,18 @@ public class PortfolioServiceImpl implements PortfolioService {
                 calculateBuyOnlyAverage(userId, instrument.getId());
 
         BigDecimal capitalAdjustedAverage =
-                calculateCapitalAdjustedAverage(userId, instrument.getId(), totalQty);
+                calculateCapitalAdjustedAverage(
+                        userId,
+                        instrument.getId(),
+                        totalQty
+                );
+
+        BigDecimal selectedAverage =
+                selectAverage(viewType,
+                        weightedAverage,
+                        buyOnlyAverage,
+                        capitalAdjustedAverage
+                );
 
         BigDecimal currentPrice =
                 fetchLatestPrice(instrument.getId(), weightedAverage);
@@ -109,20 +114,61 @@ public class PortfolioServiceImpl implements PortfolioService {
         BigDecimal currentValue =
                 totalQty.multiply(currentPrice);
 
+        BigDecimal investedAmount =
+                selectedAverage.multiply(totalQty);
+
         BigDecimal profitLoss =
-                currentValue.subtract(weightedCost);
+                currentValue.subtract(investedAmount);
 
         HoldingResponse response = new HoldingResponse();
+
+        response.setInstrumentId(instrument.getId());
         response.setSymbol(instrument.getSymbol());
         response.setQuantity(totalQty);
-        response.setWeightedAverage(weightedAverage);
-        response.setBuyOnlyAverage(buyOnlyAverage);
-        response.setCapitalAdjustedAverage(capitalAdjustedAverage);
+        response.setAveragePrice(selectedAverage);
         response.setCurrentPrice(currentPrice);
         response.setCurrentValue(currentValue);
         response.setProfitLoss(profitLoss);
 
         return response;
+    }
+
+    // ----------------------------------------
+    // Average Selector
+    // ----------------------------------------
+
+    private BigDecimal selectAverage(
+            PortfolioViewType viewType,
+            BigDecimal weighted,
+            BigDecimal buyOnly,
+            BigDecimal capitalAdjusted) {
+
+        return switch (viewType) {
+            case WEIGHTED -> weighted;
+            case BUY_ONLY -> buyOnly;
+            case CAPITAL_ADJUSTED -> capitalAdjusted;
+        };
+    }
+
+    // ----------------------------------------
+    // Calculations
+    // ----------------------------------------
+
+    private List<Lot> fetchActiveLots(Long userId) {
+        return lotRepository
+                .findByUser_IdAndRemainingQuantityGreaterThan(
+                        userId,
+                        BigDecimal.ZERO
+                );
+    }
+
+    private Map<Instrument, List<Lot>> groupLotsByInstrument(List<Lot> lots) {
+        Map<Instrument, List<Lot>> map = new HashMap<>();
+        for (Lot lot : lots) {
+            map.computeIfAbsent(lot.getInstrument(),
+                    k -> new ArrayList<>()).add(lot);
+        }
+        return map;
     }
 
     private BigDecimal calculateTotalQuantity(List<Lot> lots) {
@@ -133,56 +179,70 @@ public class PortfolioServiceImpl implements PortfolioService {
 
     private BigDecimal calculateWeightedCost(List<Lot> lots) {
         return lots.stream()
-                .map(l -> l.getRemainingQuantity().multiply(l.getBuyPrice()))
+                .map(l -> l.getRemainingQuantity()
+                        .multiply(l.getBuyPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private BigDecimal calculateBuyOnlyAverage(Long userId, Long instrumentId) {
-        BigDecimal totalBuyValue = Optional.ofNullable(
-                transactionRepository.sumBuyValue(userId, instrumentId)
-        ).orElse(BigDecimal.ZERO);
+    private BigDecimal calculateBuyOnlyAverage(Long userId,
+                                               Long instrumentId) {
 
-        BigDecimal totalBuyQty = Optional.ofNullable(
-                transactionRepository.sumBuyQuantity(userId, instrumentId)
-        ).orElse(BigDecimal.ZERO);
+        BigDecimal totalBuyValue =
+                Optional.ofNullable(
+                        transactionRepository
+                                .sumBuyValue(userId, instrumentId)
+                ).orElse(BigDecimal.ZERO);
+
+        BigDecimal totalBuyQty =
+                Optional.ofNullable(
+                        transactionRepository
+                                .sumBuyQuantity(userId, instrumentId)
+                ).orElse(BigDecimal.ZERO);
 
         return safeDivide(totalBuyValue, totalBuyQty);
     }
 
-    private BigDecimal calculateCapitalAdjustedAverage(Long userId,
-                                                       Long instrumentId,
-                                                       BigDecimal totalQty) {
+    private BigDecimal calculateCapitalAdjustedAverage(
+            Long userId,
+            Long instrumentId,
+            BigDecimal totalQty) {
 
-        BigDecimal totalBuyValue = Optional.ofNullable(
-                transactionRepository.sumBuyValue(userId, instrumentId)
-        ).orElse(BigDecimal.ZERO);
+        BigDecimal totalBuyValue =
+                Optional.ofNullable(
+                        transactionRepository
+                                .sumBuyValue(userId, instrumentId)
+                ).orElse(BigDecimal.ZERO);
 
-        BigDecimal realizedGain = Optional.ofNullable(
-                realizedGainRepository.sumRealizedGain(userId, instrumentId)
-        ).orElse(BigDecimal.ZERO);
+        BigDecimal realizedGain =
+                Optional.ofNullable(
+                        realizedGainRepository
+                                .sumRealizedGain(userId, instrumentId)
+                ).orElse(BigDecimal.ZERO);
 
-        BigDecimal netInvested = totalBuyValue.subtract(realizedGain);
+        BigDecimal netInvested =
+                totalBuyValue.subtract(realizedGain);
 
         return safeDivide(netInvested, totalQty);
     }
 
     private BigDecimal fetchLatestPrice(Long instrumentId,
-                                        BigDecimal fallbackPrice) {
+                                        BigDecimal fallback) {
 
         return Optional.ofNullable(
-                priceSnapshotRepository.findLatestPrice(instrumentId)
-        ).orElse(fallbackPrice);
+                priceSnapshotRepository
+                        .findLatestPrice(instrumentId)
+        ).orElse(fallback);
     }
 
-    private BigDecimal safeDivide(BigDecimal numerator,
-                                  BigDecimal denominator) {
+    private BigDecimal safeDivide(BigDecimal num,
+                                  BigDecimal denom) {
 
-        if (denominator == null ||
-                denominator.compareTo(BigDecimal.ZERO) == 0) {
+        if (denom == null ||
+                denom.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
 
-        return numerator.divide(denominator, 6, RoundingMode.HALF_UP);
+        return num.divide(denom, 6, RoundingMode.HALF_UP);
     }
 
     private PortfolioSummaryResponse buildPortfolioSummary(

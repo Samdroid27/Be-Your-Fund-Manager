@@ -1,0 +1,17 @@
+type Query {
+    portfolio(userId: ID!, view: PortfolioViewType!): PortfolioSummary
+}
+
+type PortfolioSummary {
+    totalInvested: Float
+    totalCurrentValue: Float
+    totalProfitLoss: Float
+    holdings: [Holding]
+}
+
+type Holding {
+    instrumentId: ID
+    symbol: String
+    quantity: Float
+    averagePrice: Float
+}

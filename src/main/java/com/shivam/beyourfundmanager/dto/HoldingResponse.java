@@ -1,23 +1,22 @@
 package com.shivam.beyourfundmanager.dto;
 
-import java.math.BigDecimal;
-
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
 public class HoldingResponse {
 
+    private Long instrumentId;
+
     private String symbol;
 
     private BigDecimal quantity;
 
-    private BigDecimal weightedAverage;
-
-    private BigDecimal buyOnlyAverage;
-
-    private BigDecimal capitalAdjustedAverage;
+    // Selected view average
+    private BigDecimal averagePrice;
 
     private BigDecimal currentPrice;
 

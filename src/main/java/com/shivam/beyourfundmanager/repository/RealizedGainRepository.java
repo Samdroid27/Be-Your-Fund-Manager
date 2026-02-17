@@ -1,6 +1,7 @@
 package com.shivam.beyourfundmanager.repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -16,5 +17,7 @@ public interface RealizedGainRepository extends JpaRepository<RealizedGain, Long
         AND r.instrument.id = :instrumentId
     """)
     BigDecimal sumRealizedGain(Long userId, Long instrumentId);
+
+    List<RealizedGain> findByUser_Id(Long userId);
 
 }

@@ -1,0 +1,26 @@
+type Query {
+    realizedGains(
+        userId: ID!,
+        taxType: TaxType,
+        startDate: String,
+        endDate: String
+    ): [RealizedGain]
+}
+
+type RealizedGain {
+    id: ID
+    instrumentId: ID
+    symbol: String
+    quantity: Float
+    buyPrice: Float
+    sellPrice: Float
+    gainAmount: Float
+    buyDate: String
+    sellDate: String
+    taxType: TaxType
+}
+
+enum TaxType {
+    STCG
+    LTCG
+}

@@ -1,0 +1,10 @@
+enum PortfolioViewType {
+    WEIGHTED
+    BUY_ONLY
+    CAPITAL_ADJUSTED
+}
+
+enum TaxType {
+    STCG
+    LTCG
+}
